@@ -1,13 +1,18 @@
+@annotations-margin-top: -5px;
 @annotations-height: 10px;
-@annotations-bg: transparent;
+@annotations-bg: rgba(0,0,0,0.5);
 
 @annotation-block-width: @annotations-height;
-@annotation-block-color: #4baad3;
+@annotation-block-color: #f1c40f;
+
+@annotation-popover-width: 276px;
+@annotation-popover-height: auto;
 
 div.hr-annotations {
 
   height: @annotations-height;
   width: 100%;
+  margin-top: @annotations-margin-top;
   position: relative;
   
   &> div.annotations-track-container {
@@ -45,14 +50,28 @@ div.hr-annotations {
         &> div.block {
        
           top: 0;
-          left: 0; 
+          left: 0;
+          cursor: pointer;
           position: absolute;
           width: @annotation-block-width;
           height: 100%;
           background-color: @annotation-block-color;
-          border: 1px solid #fff;
+          border: 1px solid @annotations-bg;
         }
       }
     }
   }    
+}
+
+.annotations-popover {
+
+  display: none;
+  width: @annotation-popover-width;
+  height: @annotation-popover-height;
+  position: fixed;
+
+  &.in {
+  
+    display: block;
+  }  
 }

@@ -1,11 +1,7 @@
 [
 
-    [2999, "Here is to the Crazy ones"],
-    [11000, "The Round Pegs and the Square Holes"],
-    [20000, "They have no respect for the Status Quo"],
-    [29000, "But the only thing you can not do is, Ignore them"],
-    [33000, "Because they change things"],
-    [35000, "They push the human race forward"],
-    [46500, "Because the people who are crazy enough to think that they can change the world..."],
-    [52000, "are the ones who do"]
+    [0, "2015 National Championship,\nOregon VS Ohio State"],
+    [2700000, "Quarter1 Stats - Game Trend: Touch Down, Trend Score: 80, Play Note: 11 Yards, Play Type: pass, Score: 6, Score Type: Touch Down"],
+    [4800000, "Quarter2 Stats - Game Trend: Upset, Trend Score: 82, Play Note: 40 Yards, Play Type: pass, Score: 8, Score Type: Touch Down"],
+    [7200000, "Quarter2 Stats - Game Trend: Touch Down, Trend Score: 90, Play Note: 44 Yards, Play Type: pass, Score: 11, Score Type: Touch Down"]
 ]

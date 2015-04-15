@@ -3,9 +3,9 @@
 
   var HDRN = window.HDRN = window.HDRN || {};
 
-  var MIN_INTERVAL = 1;
+  var MIN_INTERVAL = 500;
 
-  var ANNOTATION_DP_TIME = 5000;
+  var ANNOTATION_DP_TIME = 60000;
 
   var ANNOTATION_TMPL = "<div class=\"hr-annotations\">" +
                           "<div class=\"annotations-track-container\">" +
@@ -18,6 +18,19 @@
                         "</div>";
 
   var ANNOTATION_BLK_TMPL = "<div class=\"block\" />";
+
+  var POPOVER_TMPL = "<div class=\"popover bottom annotations-popover\">" +
+                        "<div class=\"arrow\"></div>" +
+                        "<h3 class=\"popover-title\">" +
+                          "<span class=\"popover-title-text\"></span>" +
+                          "<a class=\"anchorjs-link\" href=\"#popover-bottom\">" +
+                            "<span class=\"anchorjs-icon\"></span>" +
+                          "</a>" +
+                        "</h3>" +
+                        "<div class=\"popover-content\">" +
+                          "<p class=\"popover-content-text\"></p>" +
+                        "</div>" +
+                      "</div>";
  
   var uniqueId = 0;
 
@@ -29,9 +42,13 @@
 
   function AnnotationBlock (data, annotations) {
  
+    var that = this;
+
     this.id = getUniqueId(); 
     this.$el = $(ANNOTATION_BLK_TMPL);
     this.data = data;
+    this.annotations = annotations;
+    this.$popover = annotations.$popover;
 
     var diffTime = annotations.endTime - annotations.startTime;
 
@@ -41,14 +58,103 @@
 
     dpDuration = (dpDuration/diffTime)*100;
 
-    this.$el.css({"left": position + "%", "width": dpDuration + "%"});
+    this.$el.css({"left": position + "%"});
 
     annotations.$blocksContainer.append(this.$el);
+
+    var originalWidth = this.$el.width();
+
+    this.$el.css({"width": dpDuration + "%"});
+
+    // width should not be less than 20px
+    if (this.$el.width() < originalWidth) {
+    
+      this.$el.width(originalWidth);  
+    }
+
+    this.persistPopover = false;
+
+    this.bindEvents = function () {
+      
+      this.$el.on("mouseenter", function () {
+        
+                that.persistPopover = true;
+                that.show();
+              })
+              .on("mouseleave", function () {
+              
+                that.persistPopover = false;
+                that.hide();  
+              })
+              .on("click", function () {
+                
+                if (that.annotations.videoOptions.type === "youtube") {
+
+                  that.annotations.player.seekTo(data[0]/1000, true);
+                }
+              });
+    };
+
+    this.bindEvents();
 
     this.collection[this.id] = this;
   }
 
-  AnnotationBlock.prototype.collection = {};
+  var blocks = AnnotationBlock.prototype;
+
+  blocks.collection = {};
+  blocks.currentAnnotation = null;
+
+  blocks.show = function () {
+   
+    if (blocks.currentAnnotation) {
+    
+      if (blocks.currentAnnotation.persistPopover)  {
+      
+        return;  
+      } 
+
+      blocks.hide();
+    }
+    
+    /* jshint validthis: true */
+    /* data of a specific AnnotationBlock instance */
+    var currentAnnotation = this,
+        position = currentAnnotation.$el.offset(),
+        width = currentAnnotation.$el.width(),
+        height = currentAnnotation.$el.height();
+
+    var data = currentAnnotation.data;
+
+    var $popover = currentAnnotation.$popover,
+        popoverContent = data[1];
+
+    $popover.find(".popover-content > .popover-content-text")
+            .text(popoverContent);
+
+    $popover.css({"left": position.left + (width/2) + "px",
+                  "top": position.top + height + 5 + "px", // 5 is spacing on top
+                  "margin-left": "-" + $popover.width()/2 + "px"
+                })
+            .addClass("in");
+
+    blocks.currentAnnotation = currentAnnotation;
+  };
+
+  blocks.hide = function () {
+    
+    var currentAnnotation = blocks.currentAnnotation;
+
+    if (!currentAnnotation) {
+    
+      return;
+    } else if (currentAnnotation.persistPopover) {
+      
+      return;
+    }
+
+    currentAnnotation.$popover.removeClass("in");
+  };
 
   function genAnnotationsTl (annotations) {
 
@@ -109,6 +215,7 @@
     this.$el = $(ANNOTATION_TMPL);
     this.$blocksContainer = this.$el.find(".annotation-blocks");
 
+    this.videoOptions = videoOptions;
     this.player = null;
     this.playerId = "vid-" + getUniqueId();
     this.$player = $("<div id=\"" + this.playerId + "\" />");
@@ -116,7 +223,12 @@
 
     this.isInitialized = false;
 
-    this.$container.append(this.$player);
+    this.$container.css({"position": "relative"})
+                   .append(this.$player);
+
+    this.$popover = $(POPOVER_TMPL);
+
+    this.$container.append(this.$popover);
 
     var annotationsTimeline = {},
         annotationsTimer = null;
@@ -133,7 +245,7 @@
       var currentAnnotation = annotationsTimeline[floor];
 
       if (currentAnnotation) {
-        
+         
         currentAnnotation = AnnotationBlock.prototype.collection[currentAnnotation];
         currentAnnotation.show();
       } else {
@@ -144,7 +256,7 @@
 
     function hideAnnotation () {
     
-      AnnotationBlock.prototype.currentAnnotation.hide();  
+      AnnotationBlock.prototype.hide();  
     }
 
     function startAnnotations () {
@@ -247,19 +359,25 @@
           
             switch (event.data) {
             
-              case that.PlayerState.PLAYING:
+              case that.videoApi.PlayerState.PLAYING:
                 startAnnotations();
                 break;
-                
-              case that.PlayerState.ENDED:
+             
+              case that.videoApi.PlayerState.BUFFERING:
+                pauseAnnotations();
+                break;
+              
+              case that.videoApi.PlayerState.ENDED:
                 endAnnotations();
                 break;
                 
-              case that.PlayerState.PAUSED:
+              case that.videoApi.PlayerState.PAUSED:
                 pauseAnnotations();
                 break;
             }
-          });  
+          }); 
+          
+          player.setPlaybackRate(1);
         }
 
         that.isInitialized = true;
