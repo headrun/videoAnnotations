@@ -77,7 +77,7 @@
     this.bindEvents = function () {
       
       this.$el.on("mouseenter", function () {
-        
+       
                 that.persistPopover = true;
                 that.show();
               })
@@ -154,6 +154,7 @@
     }
 
     currentAnnotation.$popover.removeClass("in");
+    blocks.currentAnnotation = null;
   };
 
   function genAnnotationsTl (annotations) {
