@@ -107,20 +107,24 @@
 
   blocks.show = function () {
    
+    var currentAnnotation = this;
+
     if (blocks.currentAnnotation) {
-    
+   
       if (blocks.currentAnnotation.persistPopover)  {
       
         return;  
-      } 
+      } else if (blocks.currentAnnotation.id === currentAnnotation.id) {
+
+        return;
+      }
 
       blocks.hide();
     }
     
     /* jshint validthis: true */
     /* data of a specific AnnotationBlock instance */
-    var currentAnnotation = this,
-        position = currentAnnotation.$el.offset(),
+    var position = currentAnnotation.$el.offset(),
         width = currentAnnotation.$el.width(),
         height = currentAnnotation.$el.height();
 
